@@ -14,15 +14,15 @@ class MarkdownWidget extends StatefulWidget {
   const MarkdownWidget({
     Key? key,
     this.width,
-    this.height, // Optional height parameter
-    required this.textColor, // Renamed from mdcolor to textColor
-    required this.content, // Renamed from data to content
+    this.height,
+    required this.textColor,
+    required this.content,
   }) : super(key: key);
 
   final double? width;
-  final double? height; // Optional height
-  final String content; // Renamed from data to content
-  final Color textColor; // Renamed from mdcolor to textColor
+  final double? height;
+  final String content;
+  final Color textColor;
 
   @override
   _MarkdownWidgetState createState() => _MarkdownWidgetState();
@@ -33,33 +33,31 @@ class _MarkdownWidgetState extends State<MarkdownWidget> {
   Widget build(BuildContext context) {
     return Container(
       width: widget.width,
-      // Do not define height - let the content determine the height
-      // Requires disabling "Enforce Width and Height" option in editor
-      alignment: Alignment.topLeft, // Ensure alignment to top-left
+      alignment: Alignment.topLeft,
       child: MarkdownBody(
-        data: widget.content, // Renamed from data to content
+        data: widget.content,
+        onTapLink: (text, href, title) {
+          if (href != null) {
+            launchURL(href);
+          }
+        },
         styleSheet: MarkdownStyleSheet(
-          // Paragraph styling
           p: FlutterFlowTheme.of(context).bodyMedium.copyWith(
-                color: widget.textColor, // Set text color to textColor
+                color: widget.textColor,
               ),
-          // List styling (bullet points)
           listBullet: FlutterFlowTheme.of(context).bodyLarge.copyWith(
-                color: widget.textColor, // Set bullet list color to textColor
+                color: widget.textColor,
               ),
-          // Code block styling
           code: FlutterFlowTheme.of(context).bodyMedium.copyWith(
                 backgroundColor: Colors.transparent,
                 fontFamily: 'monospace',
                 fontSize: 14,
-                color: widget.textColor, // Set code text color to textColor
+                color: widget.textColor,
               ),
           codeblockPadding: EdgeInsets.all(20),
           codeblockDecoration: BoxDecoration(
-            color: widget.textColor
-                .withOpacity(0.1), // Set background color for code blocks
+            color: widget.textColor.withOpacity(0.1),
           ),
-          // Header styling for all levels
           h1: FlutterFlowTheme.of(context).titleLarge.copyWith(
                 color: widget.textColor,
               ),
@@ -81,58 +79,49 @@ class _MarkdownWidgetState extends State<MarkdownWidget> {
                 color: widget.textColor,
                 fontSize: 16,
               ),
-          // Horizontal line styling
           horizontalRuleDecoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color:
-                    widget.textColor, // Set horizontal rule color to textColor
-                width: 2, // Thickness of the line
+                color: widget.textColor,
+                width: 2,
               ),
             ),
           ),
-          // Blockquote styling
           blockquoteDecoration: BoxDecoration(
             border: Border(
               left: BorderSide(
-                color: widget
-                    .textColor, // Set blockquote left border color to textColor
-                width: 4, // Thickness of the border
+                color: widget.textColor,
+                width: 4,
               ),
             ),
           ),
           blockquote: FlutterFlowTheme.of(context).bodyMedium.copyWith(
-                color: widget.textColor
-                    .withOpacity(0.8), // Slightly lighter for blockquotes
+                color: widget.textColor.withOpacity(0.8),
                 fontStyle: FontStyle.italic,
               ),
-          // Emphasis (italic) styling
           em: FlutterFlowTheme.of(context).bodyMedium.copyWith(
                 color: widget.textColor,
-                fontStyle: FontStyle.italic, // Italic text
+                fontStyle: FontStyle.italic,
               ),
-          // Strong (bold) styling
           strong: FlutterFlowTheme.of(context).bodyMedium.copyWith(
                 color: widget.textColor,
-                fontWeight: FontWeight.bold, // Bold text
+                fontWeight: FontWeight.bold,
               ),
-          // Table styling (head and body)
           tableHead: FlutterFlowTheme.of(context).bodyMedium.copyWith(
                 color: widget.textColor,
-                fontWeight: FontWeight.bold, // Bold for table headers
+                fontWeight: FontWeight.bold,
               ),
           tableBody: FlutterFlowTheme.of(context).bodyMedium.copyWith(
-                color: widget.textColor, // Normal color for table body
+                color: widget.textColor,
               ),
-          // Link styling
           a: TextStyle(
-            color: widget.textColor, // Link color
-            decoration: TextDecoration.underline, // Underline links
+            color: FlutterFlowTheme.of(context).primary,
+            decoration: TextDecoration.underline,
           ),
         ),
         imageBuilder: (uri, title, alt) {
           return Padding(
-            padding: const EdgeInsets.all(10.0), // Adding padding around images
+            padding: const EdgeInsets.all(10.0),
             child: Image.network(uri.toString()),
           );
         },
