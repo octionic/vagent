@@ -46,7 +46,8 @@ Future<dynamic> stopTextRecording() async {
         try {
           if (response.statusCode == 200) {
             final jsonResponse = json.decode(response.body);
-            final transcription = jsonResponse['text'];
+            final transcription =
+                utf8.decode(latin1.encode(jsonResponse['text']));
             FFAppState().speechToTextResponse = transcription;
             print('Transcription: $transcription');
             return {'success': true, 'message': ''};
