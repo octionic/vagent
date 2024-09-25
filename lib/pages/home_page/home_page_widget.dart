@@ -141,43 +141,53 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                   FlutterFlowIconButton(
                                     borderRadius: 8.0,
                                     buttonSize: 40.0,
+                                    disabledIconColor: const Color(0xFFAFAFAF),
                                     icon: FaIcon(
                                       FontAwesomeIcons.cog,
                                       color: FlutterFlowTheme.of(context).info,
                                       size: 24.0,
                                     ),
-                                    onPressed: () async {
-                                      await showModalBottomSheet(
-                                        isScrollControlled: true,
-                                        backgroundColor: Colors.transparent,
-                                        context: context,
-                                        builder: (context) {
-                                          return GestureDetector(
-                                            onTap: () => FocusScope.of(context)
-                                                .unfocus(),
-                                            child: Padding(
-                                              padding: MediaQuery.viewInsetsOf(
-                                                  context),
-                                              child: const SettingsWidget(),
-                                            ),
-                                          );
-                                        },
-                                      ).then((value) => safeSetState(() {}));
-                                    },
+                                    onPressed: (_model.isRecording ||
+                                            _model.isTranscribing)
+                                        ? null
+                                        : () async {
+                                            await showModalBottomSheet(
+                                              isScrollControlled: true,
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              context: context,
+                                              builder: (context) {
+                                                return GestureDetector(
+                                                  onTap: () =>
+                                                      FocusScope.of(context)
+                                                          .unfocus(),
+                                                  child: Padding(
+                                                    padding:
+                                                        MediaQuery.viewInsetsOf(
+                                                            context),
+                                                    child: const SettingsWidget(),
+                                                  ),
+                                                );
+                                              },
+                                            ).then(
+                                                (value) => safeSetState(() {}));
+                                          },
                                   ),
                                 ],
                               ),
                             ),
                             if (!_model.showWaveform)
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 20.0, 0.0, 0.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Stack(
+                              Column(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  SizedBox(
+                                    width: 150.0,
+                                    height: 150.0,
+                                    child: Stack(
+                                      alignment: const AlignmentDirectional(0.0, 0.0),
                                       children: [
-                                        if (!_model.isRecording)
+                                        if (!(_model.isRecording ||
+                                            _model.isTranscribing))
                                           FlutterFlowIconButton(
                                             borderRadius: 100.0,
                                             buttonSize: 120.0,
@@ -236,141 +246,69 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                             },
                                           ),
                                         if (_model.isRecording)
-                                          FlutterFlowIconButton(
-                                            borderRadius: 100.0,
-                                            buttonSize: 120.0,
-                                            fillColor: const Color(0xFF131313),
-                                            icon: Icon(
-                                              Icons.stop_rounded,
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .info,
-                                              size: 60.0,
-                                            ),
-                                            showLoadingIndicator: true,
-                                            onPressed: () async {
-                                              var shouldSetState = false;
-                                              // Recording stopped
-                                              _model.isRecording = false;
-                                              safeSetState(() {});
-                                              // Run STT
-                                              _model.recordingError =
-                                                  await actions
-                                                      .stopTextRecording();
-                                              shouldSetState = true;
-                                              if (!getJsonField(
-                                                _model.recordingError,
-                                                r'''$.success''',
-                                              )) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      getJsonField(
-                                                        _model.recordingError,
-                                                        r'''$.message''',
-                                                      ).toString(),
-                                                      style: TextStyle(
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .primaryText,
-                                                      ),
-                                                    ),
-                                                    duration: const Duration(
-                                                        milliseconds: 5000),
-                                                    backgroundColor:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .error,
-                                                  ),
-                                                );
-                                                if (shouldSetState) {
-                                                  safeSetState(() {});
-                                                }
-                                                return;
-                                              }
-                                              // Store STT result
-                                              _model.queryText = FFAppState()
-                                                  .speechToTextResponse;
-                                              safeSetState(() {});
-                                              // Add blue bubble with STT result
-                                              FFAppState().addToMessageHistory(
-                                                  MessageStruct(
-                                                text: FFAppState()
-                                                    .speechToTextResponse,
-                                                blueBubble: true,
-                                              ));
-                                              safeSetState(() {});
-                                              // Wait for UI elements
-                                              await Future.delayed(
-                                                  const Duration(
-                                                      milliseconds: 100));
-                                              // Scroll bubbles
-                                              await _model.listViewController
-                                                  ?.animateTo(
-                                                _model.listViewController!
-                                                    .position.maxScrollExtent,
-                                                duration:
-                                                    const Duration(milliseconds: 100),
-                                                curve: Curves.ease,
-                                              );
-                                              // Call webhook
-                                              _model.getResponseAPICall =
-                                                  await GetAgentResponseCall
-                                                      .call(
-                                                prompt: FFAppState()
-                                                    .speechToTextResponse,
-                                                webhookURL:
-                                                    FFAppState().webhookURL,
-                                                webhookAuthValue: FFAppState()
-                                                    .webhookAuthValue,
-                                                sessionID:
-                                                    FFAppState().sessionID,
-                                              );
-
-                                              shouldSetState = true;
-                                              if ((_model.getResponseAPICall
-                                                      ?.succeeded ??
-                                                  true)) {
-                                                // Run TTS for webhook response
-                                                _model.speechDuration =
+                                          Align(
+                                            alignment:
+                                                const AlignmentDirectional(0.0, 0.0),
+                                            child: InkWell(
+                                              splashColor: Colors.transparent,
+                                              focusColor: Colors.transparent,
+                                              hoverColor: Colors.transparent,
+                                              highlightColor:
+                                                  Colors.transparent,
+                                              onTap: () async {
+                                                var shouldSetState = false;
+                                                // Recording stopped
+                                                _model.isRecording = false;
+                                                // Transcription started
+                                                _model.isTranscribing = true;
+                                                safeSetState(() {});
+                                                // Run STT
+                                                _model.recordingError =
                                                     await actions
-                                                        .fetchSpeechAndPlay(
-                                                  GetAgentResponseCall.speech(
-                                                    (_model.getResponseAPICall
-                                                            ?.jsonBody ??
-                                                        ''),
-                                                  ).toString(),
-                                                  FFAppState().apiKey,
-                                                );
+                                                        .stopTextRecording();
                                                 shouldSetState = true;
-                                                // Set timer value (playback length)
-                                                FFAppState().timerValue =
-                                                    _model.speechDuration!;
-                                                FFAppState()
-                                                    .speechToTextResponse = '';
+                                                if (!getJsonField(
+                                                  _model.recordingError,
+                                                  r'''$.success''',
+                                                )) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        getJsonField(
+                                                          _model.recordingError,
+                                                          r'''$.message''',
+                                                        ).toString(),
+                                                        style: TextStyle(
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .primaryText,
+                                                        ),
+                                                      ),
+                                                      duration: const Duration(
+                                                          milliseconds: 5000),
+                                                      backgroundColor:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .error,
+                                                    ),
+                                                  );
+                                                  if (shouldSetState) {
+                                                    safeSetState(() {});
+                                                  }
+                                                  return;
+                                                }
+                                                // Store STT result
+                                                _model.queryText = FFAppState()
+                                                    .speechToTextResponse;
                                                 safeSetState(() {});
-                                                // Show waveform
-                                                _model.showWaveform = true;
-                                                safeSetState(() {});
-                                                // Wait for UI elements (timer)
-                                                await Future.delayed(
-                                                    const Duration(
-                                                        milliseconds: 100));
-                                                // Start timer
-                                                _model.timerController
-                                                    .onStartTimer();
-                                                // Add grey bubble to conversation
+                                                // Add blue bubble with STT result
                                                 FFAppState()
                                                     .addToMessageHistory(
                                                         MessageStruct(
-                                                  text:
-                                                      GetAgentResponseCall.text(
-                                                    (_model.getResponseAPICall
-                                                            ?.jsonBody ??
-                                                        ''),
-                                                  ).toString(),
+                                                  text: FFAppState()
+                                                      .speechToTextResponse,
+                                                  blueBubble: true,
                                                 ));
                                                 safeSetState(() {});
                                                 // Wait for UI elements
@@ -386,45 +324,149 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                       milliseconds: 100),
                                                   curve: Curves.ease,
                                                 );
-                                              } else {
-                                                // Display error message in UI
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      valueOrDefault<String>(
+                                                // Call webhook
+                                                _model.getResponseAPICall =
+                                                    await GetAgentResponseCall
+                                                        .call(
+                                                  prompt: FFAppState()
+                                                      .speechToTextResponse,
+                                                  webhookURL:
+                                                      FFAppState().webhookURL,
+                                                  webhookAuthValue: FFAppState()
+                                                      .webhookAuthValue,
+                                                  sessionID:
+                                                      FFAppState().sessionID,
+                                                );
+
+                                                shouldSetState = true;
+                                                if ((_model.getResponseAPICall
+                                                        ?.succeeded ??
+                                                    true)) {
+                                                  // Run TTS for webhook response
+                                                  _model.speechDuration =
+                                                      await actions
+                                                          .fetchSpeechAndPlay(
+                                                    GetAgentResponseCall.speech(
+                                                      (_model.getResponseAPICall
+                                                              ?.jsonBody ??
+                                                          ''),
+                                                    ).toString(),
+                                                    FFAppState().apiKey,
+                                                  );
+                                                  shouldSetState = true;
+                                                  // Set timer value (playback length)
+                                                  FFAppState().timerValue =
+                                                      _model.speechDuration!;
+                                                  FFAppState()
+                                                      .speechToTextResponse = '';
+                                                  safeSetState(() {});
+                                                  // Transcription started
+                                                  _model.isTranscribing = false;
+                                                  // Show waveform
+                                                  _model.showWaveform = true;
+                                                  safeSetState(() {});
+                                                  // Wait for UI elements (timer)
+                                                  await Future.delayed(
+                                                      const Duration(
+                                                          milliseconds: 100));
+                                                  // Start timer
+                                                  _model.timerController
+                                                      .onStartTimer();
+                                                  // Add grey bubble to conversation
+                                                  FFAppState()
+                                                      .addToMessageHistory(
+                                                          MessageStruct(
+                                                    text: GetAgentResponseCall
+                                                        .text(
+                                                      (_model.getResponseAPICall
+                                                              ?.jsonBody ??
+                                                          ''),
+                                                    ).toString(),
+                                                  ));
+                                                  safeSetState(() {});
+                                                  // Wait for UI elements
+                                                  await Future.delayed(
+                                                      const Duration(
+                                                          milliseconds: 100));
+                                                  // Scroll bubbles
+                                                  await _model
+                                                      .listViewController
+                                                      ?.animateTo(
+                                                    _model
+                                                        .listViewController!
+                                                        .position
+                                                        .maxScrollExtent,
+                                                    duration: const Duration(
+                                                        milliseconds: 100),
+                                                    curve: Curves.ease,
+                                                  );
+                                                } else {
+                                                  // Display error message in UI
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
                                                         (_model.getResponseAPICall
                                                                     ?.jsonBody ??
                                                                 '')
                                                             .toString(),
-                                                        'Unknown Error',
+                                                        style: TextStyle(
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .primaryText,
+                                                        ),
                                                       ),
-                                                      style: TextStyle(
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .primaryText,
-                                                      ),
+                                                      duration: const Duration(
+                                                          milliseconds: 5000),
+                                                      backgroundColor:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .error,
                                                     ),
-                                                    duration: const Duration(
-                                                        milliseconds: 5000),
-                                                    backgroundColor:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .error,
-                                                  ),
-                                                );
-                                              }
+                                                  );
+                                                }
 
-                                              if (shouldSetState) {
-                                                safeSetState(() {});
-                                              }
-                                            },
+                                                if (shouldSetState) {
+                                                  safeSetState(() {});
+                                                }
+                                              },
+                                              child: Lottie.asset(
+                                                'assets/lottie_animations/Stop_Recording.json',
+                                                width: 150.0,
+                                                height: 150.0,
+                                                fit: BoxFit.contain,
+                                                animate: true,
+                                              ),
+                                            ),
+                                          ),
+                                        if (_model.isTranscribing)
+                                          Align(
+                                            alignment:
+                                                const AlignmentDirectional(0.0, 0.0),
+                                            child: Container(
+                                              width: 120.0,
+                                              height: 120.0,
+                                              decoration: const BoxDecoration(
+                                                color: Color(0xFF131313),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Align(
+                                                alignment: const AlignmentDirectional(
+                                                    0.0, 0.0),
+                                                child: Lottie.asset(
+                                                  'assets/lottie_animations/Loading.json',
+                                                  width: 120.0,
+                                                  height: 120.0,
+                                                  fit: BoxFit.contain,
+                                                  animate: true,
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                       ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             Padding(
                               padding: const EdgeInsetsDirectional.fromSTEB(
@@ -436,29 +478,37 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                   FlutterFlowIconButton(
                                     borderRadius: 8.0,
                                     buttonSize: 40.0,
+                                    disabledIconColor: const Color(0xFFAFAFAF),
                                     icon: FaIcon(
                                       FontAwesomeIcons.ellipsisV,
                                       color: FlutterFlowTheme.of(context).info,
                                       size: 24.0,
                                     ),
-                                    onPressed: () async {
-                                      await showModalBottomSheet(
-                                        isScrollControlled: true,
-                                        backgroundColor: Colors.transparent,
-                                        context: context,
-                                        builder: (context) {
-                                          return GestureDetector(
-                                            onTap: () => FocusScope.of(context)
-                                                .unfocus(),
-                                            child: Padding(
-                                              padding: MediaQuery.viewInsetsOf(
-                                                  context),
-                                              child: const MenuWidget(),
-                                            ),
-                                          );
-                                        },
-                                      ).then((value) => safeSetState(() {}));
-                                    },
+                                    onPressed: (_model.isRecording ||
+                                            _model.isTranscribing)
+                                        ? null
+                                        : () async {
+                                            await showModalBottomSheet(
+                                              isScrollControlled: true,
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              context: context,
+                                              builder: (context) {
+                                                return GestureDetector(
+                                                  onTap: () =>
+                                                      FocusScope.of(context)
+                                                          .unfocus(),
+                                                  child: Padding(
+                                                    padding:
+                                                        MediaQuery.viewInsetsOf(
+                                                            context),
+                                                    child: const MenuWidget(),
+                                                  ),
+                                                );
+                                              },
+                                            ).then(
+                                                (value) => safeSetState(() {}));
+                                          },
                                   ),
                                 ],
                               ),

@@ -14,17 +14,19 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   String? queryText = ' ';
 
+  bool isTranscribing = false;
+
   ///  State fields for stateful widgets in this page.
 
   // State field(s) for ListView widget.
   ScrollController? listViewController;
-  // Stores action output result for [Custom Action - validateSettings] action in RecordButton widget.
+  // Stores action output result for [Custom Action - validateSettings] action in StartRecording widget.
   bool? settingsOK;
-  // Stores action output result for [Custom Action - stopTextRecording] action in StopButton widget.
+  // Stores action output result for [Custom Action - stopTextRecording] action in StopRecording widget.
   dynamic recordingError;
-  // Stores action output result for [Backend Call - API (GetAgentResponse)] action in StopButton widget.
+  // Stores action output result for [Backend Call - API (GetAgentResponse)] action in StopRecording widget.
   ApiCallResponse? getResponseAPICall;
-  // Stores action output result for [Custom Action - fetchSpeechAndPlay] action in StopButton widget.
+  // Stores action output result for [Custom Action - fetchSpeechAndPlay] action in StopRecording widget.
   int? speechDuration;
   // State field(s) for Timer widget.
   final timerInitialTimeMs = 0;
